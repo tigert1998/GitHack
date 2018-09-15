@@ -2,12 +2,13 @@
 # -*- encoding: utf-8 -*-
 
 import sys
-import urllib2
+import urllib.request
+import urllib.parse
+import urllib.error
 import os
-import urlparse
 import zlib
 import threading
-import Queue
+import queue
 import re
 import time
 from lib.parser import parse
@@ -22,26 +23,26 @@ Usage: GitHack.py http://www.target.com/.git/
 
 bug-report: my[at]lijiejie.com (http://www.lijiejie.com)
 """
-    print msg
+    print(msg)
     sys.exit(0)
 
 
 class Scanner(object):
     def __init__(self):
         self.base_url = sys.argv[-1]
-        self.domain = urlparse.urlparse(sys.argv[-1]).netloc.replace(':', '_')
+        self.domain = urllib.parse.urlparse(sys.argv[-1]).netloc.replace(':', '_')
         if not os.path.exists(self.domain):
             os.mkdir(self.domain)
-        print '[+] Download and parse index file ...'
+        print('[+] Download and parse index file ...')
         data = self._request_data(sys.argv[-1] + '/index')
         with open('index', 'wb') as f:
             f.write(data)
-        self.queue = Queue.Queue()
+        self.queue = queue.Queue()
         for entry in parse('index'):
             if "sha1" in entry.keys():
                 self.queue.put((entry["sha1"].strip(), entry["name"].strip()))
                 try:
-                    print entry['name']
+                    print(entry['name'])
                 except:
                     pass
         self.lock = threading.Lock()
@@ -49,12 +50,12 @@ class Scanner(object):
         self.STOP_ME = False
 
     def _request_data(self, url):
-        request = urllib2.Request(url, None, {'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X)'})
-        return urllib2.urlopen(request).read()
+        request = urllib.request.Request(url, None, {'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X)'})
+        return urllib.request.urlopen(request).read()
 
     def _print(self, msg):
         self.lock.acquire()
-        print msg
+        print(msg)
         self.lock.release()
 
     def get_back_file(self):
@@ -71,7 +72,8 @@ class Scanner(object):
                         data = zlib.decompress(data)
                     except:
                         self._print('[Error] Fail to decompress %s' % file_name)
-                    data = re.sub('blob \d+\00', '', data)
+
+                    data = data[data.index(b'\00') + 1: ]
                     target_dir = os.path.join(self.domain, os.path.dirname(file_name) )
                     if target_dir and not os.path.exists(target_dir):
                         os.makedirs(target_dir)
@@ -79,11 +81,11 @@ class Scanner(object):
                         f.write(data)
                     self._print('[OK] %s' % file_name)
                     break
-                except urllib2.HTTPError, e:
+                except urllib.error.HTTPError as e:
                     if str(e).find('HTTP Error 404') >=0:
                         self._print('[File not found] %s' % file_name)
                         break
-                except Exception, e:
+                except Exception as e:
                     self._print('[Error] %s' % e)
         self.exit_thread()
 
@@ -103,7 +105,7 @@ s.scan()
 try:
     while s.thread_count > 0:
         time.sleep(0.1)
-except KeyboardInterrupt, e:
+except KeyboardInterrupt as e:
     s.STOP_ME = True
     time.sleep(1.0)
-    print 'User Aborted.'
+    print('User Aborted.')

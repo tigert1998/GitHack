@@ -1,4 +1,8 @@
-# GitHack
+# GitHack-py3
+
+This repository is forked from [lijiejie/GitHack](https://github.com/lijiejie/GitHack). I migrated the former python code to `python3`. The following description is the origin author's `readme`.
+
+## Original readme
 
 
 GitHack is a `.git` folder disclosure exploit. 
@@ -9,15 +13,15 @@ GitHack是一个.git泄露利用脚本，通过泄露的.git文件夹下的文�
 
 渗透测试人员、攻击者，可以进一步审计代码，挖掘：文件上传，SQL注射等web安全漏洞。
 
-## 工作原理 ##
+### 工作原理
 
 * 解析.git/index文件，找到工程中所有的： ( 文件名，文件sha1 )
 * 去.git/objects/ 文件夹下下载对应的文件
 * zlib解压文件，按原始的目录结构写入源代码
 
-## 用法示例 ##
+### 用法示例
     GitHack.py http://www.openssl.org/.git/
 
-## Thanks ##
+### Thanks
 Thanks for sbp's great work, I used his .git index parser [gin - a Git index file parser](https://github.com/sbp/gin).
 
